@@ -12,8 +12,10 @@ import {
 } from 'lucide-react';
 import { useModelStore, BenchmarkResults } from '../lib/store';
 import toast from 'react-hot-toast';
+import { BenchmarkChart } from './BenchmarkChart';
 
-const API_URL = 'http://localhost:8003';
+// Read API URL from environment variable (Vite specific), fallback to localhost
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8004';
 
 export function ModelList() {
   const { models, updateModelBenchmark, deleteModel } = useModelStore();
@@ -191,29 +193,33 @@ export function ModelList() {
 
             {/* Benchmark Results */}
             {model.benchmarkResults && (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-5 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                {/* Metric Item Structure */}
-                {[ // Define metrics in an array for easier mapping/styling
-                  { Icon: BarChart, label: 'Accuracy', value: model.benchmarkResults.accuracy, suffix: ' %', color: 'text-blue-500 dark:text-blue-400' },
-                  { Icon: Clock, label: 'Inference Time', value: model.benchmarkResults.inferenceTime, suffix: ' ms', color: 'text-green-500 dark:text-green-400' },
-                  { Icon: Memory, label: 'Memory Usage', value: model.benchmarkResults.memoryUsage / (1024 * 1024), suffix: ' MB', color: 'text-purple-500 dark:text-purple-400' },
-                  { Icon: Zap, label: 'FPS', value: model.benchmarkResults.fps, suffix: '', color: 'text-yellow-500 dark:text-yellow-400' },
-                  { Icon: Gauge, label: 'Latency', value: model.benchmarkResults.latency, suffix: ' ms', color: 'text-red-500 dark:text-red-400' },
-                  { Icon: Activity, label: 'Throughput', value: model.benchmarkResults.throughput, suffix: ' FPS', color: 'text-indigo-500 dark:text-indigo-400' },
-                  ...(model.benchmarkResults.gpuUtilization !== undefined ? 
-                     [{ Icon: Activity, label: 'GPU Utilization', value: model.benchmarkResults.gpuUtilization, suffix: ' %', color: 'text-pink-500 dark:text-pink-400' }] : [])
-                ].map(({ Icon, label, value, suffix, color }) => (
-                   <div key={label} className="flex items-center space-x-3">
-                     <Icon className={`w-6 h-6 flex-shrink-0 ${color}`} />
-                     <div>
-                       <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
-                       <p className="font-semibold text-gray-800 dark:text-gray-100">
-                         {formatMetric(value, suffix)}
-                       </p>
-                     </div>
-                   </div>
-                ))}
-              </div>
+              <>
+                {/* Existing Text Metrics */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-5 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                   {[ // Define metrics in an array for easier mapping/styling
+                      { Icon: BarChart, label: 'Accuracy', value: model.benchmarkResults.accuracy, suffix: ' %', color: 'text-blue-500 dark:text-blue-400' },
+                      { Icon: Clock, label: 'Inference Time', value: model.benchmarkResults.inferenceTime, suffix: ' ms', color: 'text-green-500 dark:text-green-400' },
+                      { Icon: Memory, label: 'Memory Usage', value: model.benchmarkResults.memoryUsage / (1024 * 1024), suffix: ' MB', color: 'text-purple-500 dark:text-purple-400' },
+                      { Icon: Zap, label: 'FPS', value: model.benchmarkResults.fps, suffix: '', color: 'text-yellow-500 dark:text-yellow-400' },
+                      { Icon: Gauge, label: 'Latency', value: model.benchmarkResults.latency, suffix: ' ms', color: 'text-red-500 dark:text-red-400' },
+                      { Icon: Activity, label: 'Throughput', value: model.benchmarkResults.throughput, suffix: ' FPS', color: 'text-indigo-500 dark:text-indigo-400' },
+                      ...(model.benchmarkResults.gpuUtilization !== undefined ? 
+                         [{ Icon: Activity, label: 'GPU Utilization', value: model.benchmarkResults.gpuUtilization, suffix: ' %', color: 'text-pink-500 dark:text-pink-400' }] : [])
+                    ].map(({ Icon, label, value, suffix, color }) => (
+                       <div key={label} className="flex items-center space-x-3">
+                         <Icon className={`w-6 h-6 flex-shrink-0 ${color}`} />
+                         <div>
+                           <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
+                           <p className="font-semibold text-gray-800 dark:text-gray-100">
+                             {formatMetric(value, suffix)}
+                           </p>
+                         </div>
+                       </div>
+                    ))}
+                </div>
+                {/* Render the Chart Component */}
+                <BenchmarkChart results={model.benchmarkResults} />
+              </>
             )}
           </div>
         );
